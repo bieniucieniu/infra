@@ -1,13 +1,23 @@
 # infra
 
-Flux GitOps repo for the `rpi` k3s cluster. Flux reconciles `./clusters/rpi` from `main`.
+Flux GitOps repo for the `rpi` k3s cluster. Three Flux Kustomizations reconcile from `main`:
+
+| Flux Kustomization | Path | Purpose |
+|--------------------|------|---------|
+| `flux-system` | `./clusters/rpi/flux-system` | Controllers, GitRepository, child Kustomization CRs |
+| `infrastructure` | `./clusters/rpi/infrastructure` | Platform config (Traefik HelmChartConfig) |
+| `apps` | `./clusters/rpi/apps` | Application workloads |
+
+Check status: `flux get kustomizations -A`
 
 ## Layout
 
 ```
 clusters/rpi/
-├── kustomization.yaml          # cluster root
-├── flux-system/                # Flux bootstrap (do not hand-edit gotk-components.yaml)
+├── flux-system/                # Flux bootstrap + Kustomization CRs
+│   ├── gotk-sync.yaml          # GitRepository + flux-system Kustomization
+│   ├── infrastructure.yaml     # Flux Kustomization CR → infrastructure/
+│   └── apps.yaml               # Flux Kustomization CR → apps/
 ├── infrastructure/             # cluster-wide platform config
 │   └── traefik/                # k3s bundled Traefik HelmChartConfig
 └── apps/                       # application workloads
@@ -114,7 +124,7 @@ spec:
         email: fluxcdbot@users.noreply.github.com
       messageTemplate: |
         chore(<app>): update image
-        {{range .Updated.Images -}}
+        {{range .Changed.Images -}}
         - {{.}}
         {{end -}}
     push:
@@ -168,5 +178,6 @@ kubectl get gateway traefik-gateway -n kube-system \
 
 ```bash
 kubectl kustomize clusters/rpi/apps/<app>
-kubectl kustomize clusters/rpi
+kubectl kustomize clusters/rpi/infrastructure
+kubectl kustomize clusters/rpi/flux-system
 ```

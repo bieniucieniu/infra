@@ -19,7 +19,7 @@ spec:
       messageTemplate: |
         chore(breakout): update image
 
-        {{range .Updated.Images -}}
+        {{range .Changed.Images -}}
         - {{.}}
         {{end -}}
     push:

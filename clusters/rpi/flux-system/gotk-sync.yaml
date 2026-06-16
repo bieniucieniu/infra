@@ -20,8 +20,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./clusters/rpi
-  prune: true
+  path: ./clusters/rpi/flux-system
+  prune: false
   sourceRef:
     kind: GitRepository
     name: flux-system
