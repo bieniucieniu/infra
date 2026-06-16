@@ -8,7 +8,6 @@ Flux GitOps repo for the `rpi` k3s cluster. Flux reconciles `./clusters/rpi` fro
 clusters/rpi/
 ├── kustomization.yaml          # cluster root
 ├── flux-system/                # Flux bootstrap (do not hand-edit gotk-components.yaml)
-├── infrastructure/             # cluster-wide platform config
 └── apps/                       # application workloads
     ├── kustomization.yaml
     ├── image-update-automation.yaml   # one file per app, lives here not inside app dir
@@ -21,8 +20,8 @@ clusters/rpi/
 
 ## Cluster assumptions
 
-- **Ingress:** k3s bundled Traefik in `kube-system` (do not install Traefik via Helm here).
-- **Gateway API:** use `HTTPRoute` attached to the `traefik` Gateway in `kube-system` (listener `web`, port 80). TLS is handled outside the cluster.
+- **Ingress:** k3s bundled Traefik in `kube-system` (do not install or configure Traefik in this repo).
+- **Gateway API:** enabled via k3s server manifest `/mnt/sda1/k3s/server/manifests/traefik-gateway.yaml`. Use `HTTPRoute` attached to Gateway `traefik-gateway` in `kube-system` (listener `web`). TLS is handled outside the cluster.
 - **Cloudflare tunnel:** runs on the manager node, not in Kubernetes.
 - **Domains:** public hostnames use `*.kurwidolek.com` (e.g. `breakout.kurwidolek.com`).
 - **Image automation:** Flux image reflector/automation controllers are in `flux-system/gotk-image-controllers.yaml`.
@@ -68,7 +67,7 @@ image: ghcr.io/bieniucieniu/<app>:latest # {"$imagepolicy": "flux-system:<app>"}
 
 **`httproute.yaml`** — Gateway API route:
 
-- `parentRefs`: Gateway `traefik` in `kube-system`, section `web`
+- `parentRefs`: Gateway `traefik-gateway` in `kube-system`, section `web`
 - `hostnames`: `<app>.kurwidolek.com`
 - `backendRefs`: the app Service and port
 
@@ -131,17 +130,37 @@ The `flux-system` GitRepository credentials must allow push to `main` for image 
 
 In Cloudflare (on the manager tunnel), route `<app>.kurwidolek.com` to k3s Traefik over HTTP (port 80).
 
-## Adding infrastructure
+## k3s Traefik (server-side, not in this repo)
 
-Put cluster-wide changes under `clusters/rpi/infrastructure/` and reference them from `clusters/rpi/infrastructure/kustomization.yaml`.
+Gateway API is configured on the k3s server:
 
-Do **not** add here:
+```
+/mnt/sda1/k3s/server/manifests/traefik-gateway.yaml
+```
 
-- Traefik installation (k3s provides it)
-- Cloudflare tunnel manifests
-- Gateway API CRD installs
+Base config:
 
-Shared Gateway config for k3s Traefik lives in `infrastructure/k3s-traefik/`.
+```yaml
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    providers:
+      kubernetesGateway:
+        enabled: true
+    gateway:
+      listeners:
+        web:
+          namespacePolicy:
+            from: All
+```
+
+The `namespacePolicy.from: All` line is required so HTTPRoutes in app namespaces (e.g. `breakout`) are accepted by the Helm-managed `traefik-gateway`. Without it, only routes in `kube-system` are allowed.
+
+Do **not** duplicate this in the GitOps repo. Do **not** create a separate `Gateway` resource — k3s Helm creates `traefik-gateway` automatically.
 
 ## Conventions
 
@@ -150,7 +169,7 @@ Shared Gateway config for k3s Traefik lives in `infrastructure/k3s-traefik/`.
 | App namespace | same as app name (`breakout`, `myapp`, …) |
 | Labels | `app.kubernetes.io/name`, `app.kubernetes.io/part-of` |
 | Flux image resources | `metadata.namespace: flux-system`, name matches app |
-| HTTPRoute parent | `traefik` / `kube-system` / listener `web` |
+| HTTPRoute parent | `traefik-gateway` / `kube-system` / listener `web` |
 | Hostname | `<app>.kurwidolek.com` |
 
 ## Validate locally

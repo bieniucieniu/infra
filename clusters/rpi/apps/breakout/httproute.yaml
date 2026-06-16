@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/part-of: breakout
 spec:
   parentRefs:
-    - name: traefik
+    - name: traefik-gateway
       namespace: kube-system
       sectionName: web
   hostnames:
