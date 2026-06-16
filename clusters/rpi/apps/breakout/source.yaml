@@ -1,0 +1,20 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: breakout
+  namespace: flux-system
+spec:
+  image: ghcr.io/bieniucieniu/breakout
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: breakout
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: breakout
+  policy:
+    alphabetical:
+      order: asc
