@@ -8,6 +8,8 @@ Flux GitOps repo for the `rpi` k3s cluster. Flux reconciles `./clusters/rpi` fro
 clusters/rpi/
 ├── kustomization.yaml          # cluster root
 ├── flux-system/                # Flux bootstrap (do not hand-edit gotk-components.yaml)
+├── infrastructure/             # cluster-wide platform config
+│   └── traefik/                # k3s bundled Traefik HelmChartConfig
 └── apps/                       # application workloads
     ├── kustomization.yaml
     ├── image-update-automation.yaml   # one file per app, lives here not inside app dir
@@ -20,8 +22,8 @@ clusters/rpi/
 
 ## Cluster assumptions
 
-- **Ingress:** k3s bundled Traefik in `kube-system` (do not install or configure Traefik in this repo).
-- **Gateway API:** enabled via k3s server manifest `/mnt/sda1/k3s/server/manifests/traefik-gateway.yaml`. Use `HTTPRoute` attached to Gateway `traefik-gateway` in `kube-system` (listener `web`). TLS is handled outside the cluster.
+- **Ingress:** k3s bundled Traefik in `kube-system` (do not install a separate Traefik HelmRelease).
+- **Gateway API:** configured via `infrastructure/traefik/helm-chart-config.yaml`. Use `HTTPRoute` attached to Gateway `traefik-gateway` in `kube-system` (listener `web`). TLS is handled outside the cluster.
 - **Cloudflare tunnel:** runs on the manager node, not in Kubernetes.
 - **Domains:** public hostnames use `*.kurwidolek.com` (e.g. `breakout.kurwidolek.com`).
 - **Image automation:** Flux image reflector/automation controllers are in `flux-system/gotk-image-controllers.yaml`.
@@ -130,37 +132,27 @@ The `flux-system` GitRepository credentials must allow push to `main` for image 
 
 In Cloudflare (on the manager tunnel), route `<app>.kurwidolek.com` to k3s Traefik over HTTP (port 80).
 
-## k3s Traefik (server-side, not in this repo)
+## k3s Traefik
 
-Gateway API is configured on the k3s server:
+Traefik is installed by k3s. Its Gateway API settings are managed in GitOps:
 
 ```
-/mnt/sda1/k3s/server/manifests/traefik-gateway.yaml
+clusters/rpi/infrastructure/traefik/helm-chart-config.yaml
 ```
 
-Base config:
+Do **not** keep a duplicate at `/mnt/sda1/k3s/server/manifests/traefik-gateway.yaml` — delete the server file after Flux owns the config.
 
-```yaml
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  valuesContent: |-
-    providers:
-      kubernetesGateway:
-        enabled: true
-    gateway:
-      listeners:
-        web:
-          namespacePolicy:
-            from: All
+Do **not** create a separate `Gateway` resource — k3s Helm creates `traefik-gateway` automatically.
+
+The `namespacePolicy.from: All` setting is required so HTTPRoutes in app namespaces (e.g. `breakout`) are accepted.
+
+After changing the HelmChartConfig, verify Traefik picked it up:
+
+```bash
+kubectl get helmchartconfig traefik -n kube-system -o yaml
+kubectl get gateway traefik-gateway -n kube-system \
+  -o jsonpath='{.spec.listeners[0].allowedRoutes.namespaces.from}{"\n"}'
 ```
-
-The `namespacePolicy.from: All` line is required so HTTPRoutes in app namespaces (e.g. `breakout`) are accepted by the Helm-managed `traefik-gateway`. Without it, only routes in `kube-system` are allowed.
-
-Do **not** duplicate this in the GitOps repo. Do **not** create a separate `Gateway` resource — k3s Helm creates `traefik-gateway` automatically.
 
 ## Conventions
 
