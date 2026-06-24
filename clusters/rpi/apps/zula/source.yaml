@@ -1,0 +1,20 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: zula-backend
+  namespace: flux-system
+spec:
+  image: ghcr.io/bieniucieniu/zula/backend
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: zula-backend
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: zula-backend
+  policy:
+    alphabetical:
+      order: asc

@@ -1,0 +1,224 @@
+# Schema + seed SQL from zula apps/backend/db (matches devenv postgres.initialScript).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula
+    app.kubernetes.io/part-of: zula
+data:
+  001-init.sql: |
+    CREATE SEQUENCE public.snowflake_seq;
+
+    CREATE OR REPLACE FUNCTION public.generate_snowflake_id(node_id int)
+    RETURNS bigint AS $$
+    DECLARE
+        our_epoch bigint := 1672531200000;
+        seq_id bigint;
+        now_millis bigint;
+        result bigint := 0;
+    BEGIN
+        SELECT nextval('public.snowflake_seq') % 4096 INTO seq_id;
+        SELECT FLOOR(EXTRACT(EPOCH FROM clock_timestamp()) * 1000) INTO now_millis;
+
+        result := (now_millis - our_epoch) << 22;
+        result := result | (node_id << 12);
+        result := result | seq_id;
+
+        RETURN result;
+    END;
+    $$ LANGUAGE plpgsql VOLATILE;
+
+    CREATE TABLE users (
+        id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        username VARCHAR(50) UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE user_profiles (
+        user_id bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        display_name VARCHAR(100),
+        avatar_url text,
+        bio text,
+        timezone VARCHAR(10),
+        preferred_language VARCHAR(5),
+        location_tag varchar(100),
+        seller_headline varchar(160),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    COMMENT ON COLUMN user_profiles.location_tag IS
+        'Coarse location label (city/region); no continuous GPS.';
+    COMMENT ON COLUMN user_profiles.seller_headline IS
+        'Short public tagline, e.g. "Handmade leather goods · Warsaw"';
+
+    CREATE TABLE user_identities (
+        id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        provider VARCHAR(50) NOT NULL CHECK (provider IN ('google', 'apple')),
+        provider_user_id VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        provider_metadata jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (provider, provider_user_id)
+    );
+
+    CREATE TABLE user_stats (
+        user_id bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        explicit_rating_avg DECIMAL(3,2) DEFAULT 5.00,
+        implicit_trust_score INT DEFAULT 100,
+        last_calculated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE user_sessions (
+        id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash VARCHAR(255) UNIQUE NOT NULL,
+        device_info VARCHAR(100),
+        ip_address VARCHAR(45),
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        is_revoked boolean DEFAULT false NOT NULL
+    );
+
+    CREATE TABLE user_ratings (
+        id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        reviewer_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reviewee_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        comment text,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE user_trust_ledger (
+        id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        delta integer NOT NULL,
+        event_type VARCHAR(50) NOT NULL,
+        description text,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE user_blocks (
+        blocker_id bigint REFERENCES users(id) ON DELETE CASCADE,
+        blocked_id bigint REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (blocker_id, blocked_id)
+    );
+
+    CREATE TABLE seller_activity_stats (
+        user_id bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        active_offer_count int NOT NULL DEFAULT 0,
+        active_need_count int NOT NULL DEFAULT 0,
+        active_trip_count int NOT NULL DEFAULT 0,
+        fulfilled_item_count int NOT NULL DEFAULT 0,
+        last_calculated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX seller_activity_stats_offers_idx
+        ON seller_activity_stats (active_offer_count DESC)
+        WHERE active_offer_count > 0;
+
+    CREATE TABLE documents (
+        id            bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        owner_user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        format        varchar(30) NOT NULL DEFAULT 'markdown'
+                      CHECK (format = 'markdown'),
+        source        text NOT NULL DEFAULT '',
+        revision      int NOT NULL DEFAULT 1,
+        created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX documents_owner_idx ON documents (owner_user_id, updated_at DESC);
+
+    CREATE TABLE document_revisions (
+        id            bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        document_id   bigint NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+        revision      int NOT NULL,
+        format        varchar(30) NOT NULL,
+        source        text NOT NULL,
+        created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (document_id, revision)
+    );
+
+    CREATE TABLE user_profile_readme (
+        user_id       bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        document_id   bigint NOT NULL REFERENCES documents(id) ON DELETE RESTRICT,
+        updated_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE user_portfolio_items (
+        id                bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
+        user_id           bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        kind              varchar(30) NOT NULL
+                          CHECK (kind IN ('creation', 'offer', 'case_study', 'external_link')),
+        title             varchar(200) NOT NULL,
+        summary           text,
+        body_document_id  bigint REFERENCES documents(id) ON DELETE SET NULL,
+        feed_item_id      bigint,
+        trade_id          bigint,
+        external_url      text,
+        cover_object_key  text,
+        sort_order        int NOT NULL DEFAULT 0,
+        visibility        varchar(20) NOT NULL DEFAULT 'public'
+                          CHECK (visibility IN ('public', 'unlisted')),
+        created_at        timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at        timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX user_portfolio_items_user_idx
+        ON user_portfolio_items (user_id, sort_order, id DESC)
+        WHERE visibility = 'public';
+
+    CREATE TABLE user_profile_pins (
+        user_id             bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        portfolio_item_id   bigint NOT NULL REFERENCES user_portfolio_items(id) ON DELETE CASCADE,
+        sort_order          int NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, portfolio_item_id)
+    );
+
+    CREATE INDEX user_profile_pins_order_idx
+        ON user_profile_pins (user_id, sort_order);
+  002-seed.sql: |
+    TRUNCATE user_profile_pins, user_portfolio_items, user_profile_readme, document_revisions, documents,
+        seller_activity_stats, user_blocks, user_trust_ledger, user_ratings, user_sessions, user_stats,
+        user_identities, user_profiles, users RESTART IDENTITY CASCADE;
+
+    INSERT INTO users (username) VALUES
+        ('alice'),
+        ('bob'),
+        ('carol'),
+        ('dave'),
+        ('eve'),
+        ('frank'),
+        ('grace'),
+        ('henry'),
+        ('iris'),
+        ('jack');
+
+    INSERT INTO user_profiles (user_id, display_name, avatar_url, bio, timezone, preferred_language, seller_headline, location_tag)
+    SELECT id, username, NULL, 'Seed user profile', 'UTC', 'en', 'Zula community member', 'Warsaw'
+    FROM users;
+
+    INSERT INTO user_stats (user_id, explicit_rating_avg, implicit_trust_score)
+    SELECT id, 5.00, 100 FROM users;
+
+    INSERT INTO seller_activity_stats (user_id)
+    SELECT id FROM users;
+
+    INSERT INTO user_identities (user_id, provider, provider_user_id, email)
+    SELECT id, 'google', 'google-seed-' || username, username || '@example.com'
+    FROM users
+    WHERE username IN ('alice', 'bob', 'carol');
+
+    INSERT INTO user_ratings (reviewer_id, reviewee_id, rating, comment)
+    SELECT r.id, e.id, 5, 'Great trade partner'
+    FROM users r, users e
+    WHERE r.username = 'alice' AND e.username = 'bob';
+
+    INSERT INTO user_trust_ledger (user_id, delta, event_type, description)
+    SELECT id, 10, 'SEED_EVENT', 'Initial seed trust bonus'
+    FROM users
+    WHERE username = 'alice';

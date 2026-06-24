@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zula-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zula-backend
+        app.kubernetes.io/part-of: zula
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:18-alpine
+          env:
+            - name: PGHOST
+              value: postgres
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: PG_USER
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until pg_isready -h "$PGHOST" -U "$PGUSER"; do
+                echo "waiting for postgres..."
+                sleep 2
+              done
+      containers:
+        - name: backend
+          image: ghcr.io/bieniucieniu/zula/backend:latest # {"$imagepolicy": "flux-system:zula-backend"}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          env:
+            - name: PG_HOST
+              value: postgres
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: PG_USER
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: PG_PASSWORD
+            - name: PG_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: PG_DATABASE
+            - name: S3_ENDPOINT
+              value: http://minio:9000
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: S3_BUCKET
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: S3_SECRET_KEY
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: JWT_SECRET
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: zula
+                  key: GOOGLE_CLIENT_SECRET
+            - name: HOST_BASE_URL
+              value: https://zula.kurwidolek.com
+            - name: HTTP_PORT
+              value: "8080"
+            - name: GRPC_PORT
+              value: "50051"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: zula-backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+      protocol: TCP
