@@ -17,6 +17,8 @@ spec:
         app.kubernetes.io/name: zula-backend
         app.kubernetes.io/part-of: zula
     spec:
+      imagePullSecrets:
+        - name: ghcr-auth
       initContainers:
         - name: wait-for-postgres
           image: postgres:18-alpine
