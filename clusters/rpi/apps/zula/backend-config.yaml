@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+data:
+  PG_HOST: postgres
+  PG_PORT: "5432"
+  PG_USER: postgres
+  PG_DATABASE: zula_dev
+  S3_ENDPOINT: http://minio:9000
+  S3_BUCKET: zula-dev
+  HTTP_PORT: "8080"
+  GRPC_PORT: "50051"
+  HOST_BASE_URL: https://zula.kurwidolek.com
