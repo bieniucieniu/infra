@@ -9,4 +9,5 @@ resources:
   - minio-helmrelease.yaml
   - workload.yaml
   - httproute.yaml
+  - grpcroute.yaml
   - source.yaml
