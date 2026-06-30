@@ -17,6 +17,10 @@ metadata:
 spec:
   imageRepositoryRef:
     name: zula-backend
+  filterTags:
+    pattern: ^latest$
+  digestReflectionPolicy: Always
+  interval: 5m
   policy:
     alphabetical:
       order: asc
