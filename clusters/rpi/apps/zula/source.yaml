@@ -7,7 +7,7 @@ spec:
   image: ghcr.io/bieniucieniu/zula/backend
   interval: 1m
   secretRef:
-    name: flux-system
+    name: ghcr-auth
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
