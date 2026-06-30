@@ -17,6 +17,13 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: backend
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
             value: /health
       backendRefs:
         - name: backend
@@ -24,7 +31,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /api/auth
+            value: /
       backendRefs:
-        - name: backend
+        - name: web
           port: 8080

@@ -13,4 +13,4 @@ data:
   PG_DATABASE: zula_dev
   S3_ENDPOINT: http://minio:9000
   S3_BUCKET: zula-dev
-  HOST_BASE_URL: https://zula.kurwidolek.com
+  APP_URL: https://zula.kurwidolek.com

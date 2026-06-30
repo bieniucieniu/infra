@@ -5,3 +5,4 @@ resources:
   - zula
   - image-update-automation.yaml
   - zula-image-update-automation.yaml
+  - zula-web-image-update-automation.yaml

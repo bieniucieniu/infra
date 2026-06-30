@@ -8,6 +8,7 @@ resources:
   - postgres-helmrelease.yaml
   - minio-helmrelease.yaml
   - workload.yaml
+  - web-workload.yaml
   - httproute.yaml
   - grpcroute.yaml
   - source.yaml
