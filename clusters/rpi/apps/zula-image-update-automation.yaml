@@ -19,9 +19,9 @@ spec:
       messageTemplate: |
         chore(zula): update backend image
 
-        {{range .Changed.Images -}}
-        - {{.}}
-        {{end -}}
+        {{ range $_, $change := .Changed.Changes -}}
+        - {{ $change.OldValue }} -> {{ $change.NewValue }}
+        {{ end -}}
     push:
       branch: main
   update:
