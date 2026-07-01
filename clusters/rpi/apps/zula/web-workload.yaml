@@ -21,7 +21,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: web
-          image: ghcr.io/bieniucieniu/zula/web:latest@sha256:1531a1a7df487e610960aafd5d3bebde25b5515414698a295e502982a28bd8e9 # {"$imagepolicy": "flux-system:zula-web"}
+          image: ghcr.io/bieniucieniu/zula/web:latest@sha256:992eed755149b9b6340763630e0b9815be70dc1329817112911c38abcf06552d # {"$imagepolicy": "flux-system:zula-web"}
           ports:
             - name: http
               containerPort: 8080
