@@ -4,7 +4,7 @@ metadata:
   name: zula-backend
   namespace: flux-system
 spec:
-  image: ghcr.io/bieniucieniu/zula/backend
+  image: ghcr.io/bieniucieniu/zula-poc-1/backend
   interval: 1m
   secretRef:
     name: ghcr-auth
@@ -31,7 +31,7 @@ metadata:
   name: zula-web
   namespace: flux-system
 spec:
-  image: ghcr.io/bieniucieniu/zula/web
+  image: ghcr.io/bieniucieniu/zula-poc-1/web
   interval: 1m
   secretRef:
     name: ghcr-auth

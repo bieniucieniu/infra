@@ -10,5 +10,4 @@ resources:
   - workload.yaml
   - web-workload.yaml
   - httproute.yaml
-  - grpcroute.yaml
   - source.yaml
