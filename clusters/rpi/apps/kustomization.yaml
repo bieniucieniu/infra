@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - breakout
   - zula
+  - headlamp
   - image-update-automation.yaml
   - zula-image-update-automation.yaml
   - zula-web-image-update-automation.yaml
