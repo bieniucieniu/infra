@@ -1,0 +1,68 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: headlamp
+  namespace: headlamp
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/part-of: headlamp
+spec:
+  interval: 30m
+  timeout: 5m
+  chart:
+    spec:
+      chart: headlamp
+      version: "0.43.0"
+      sourceRef:
+        kind: HelmRepository
+        name: headlamp
+        namespace: flux-system
+      interval: 12h
+  releaseName: headlamp
+  values:
+    fullnameOverride: headlamp
+    replicaCount: 1
+    # Auth default: paste ServiceAccount token in UI (see AUTH options in PR).
+    # OIDC / Cloudflare Access / unsafeUseServiceAccountToken = opt-in later.
+    config:
+      inCluster: true
+      pluginsDir: /build/plugins
+    clusterRoleBinding:
+      create: true
+      clusterRoleName: cluster-admin
+    initContainers:
+      - name: headlamp-plugin-flux
+        image: ghcr.io/headlamp-k8s/headlamp-plugin-flux:v0.6.0
+        imagePullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - mkdir -p /build/plugins && cp -r /plugins/* /build/plugins/ && chown -R 100:101 /build
+        securityContext:
+          runAsNonRoot: false
+          privileged: false
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+          - name: headlamp-plugins
+            mountPath: /build/plugins
+    volumeMounts:
+      - name: headlamp-plugins
+        mountPath: /build/plugins
+    volumes:
+      - name: headlamp-plugins
+        emptyDir: {}
+    service:
+      type: ClusterIP
+      port: 80
+    ingress:
+      enabled: false
+    httpRoute:
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
