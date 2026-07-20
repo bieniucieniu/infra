@@ -3,9 +3,6 @@ kind: HelmRelease
 metadata:
   name: headlamp
   namespace: headlamp
-  labels:
-    app.kubernetes.io/name: headlamp
-    app.kubernetes.io/part-of: headlamp
 spec:
   interval: 30m
   timeout: 5m

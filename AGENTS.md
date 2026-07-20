@@ -169,7 +169,6 @@ kubectl get gateway traefik-gateway -n kube-system \
 | Item | Convention |
 |------|------------|
 | App namespace | same as app name (`breakout`, `myapp`, …) |
-| Labels | `app.kubernetes.io/name`, `app.kubernetes.io/part-of` |
 | Flux image resources | `metadata.namespace: flux-system`, name matches app |
 | HTTPRoute parent | `traefik-gateway` / `kube-system` / listener `web` |
 | Hostname | `<app>.kurwidolek.com` |
