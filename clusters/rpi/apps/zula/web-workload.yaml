@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-web
+    app.kubernetes.io/part-of: zula
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zula-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zula-web
+        app.kubernetes.io/part-of: zula
+    spec:
+      imagePullSecrets:
+        - name: ghcr-auth
+      containers:
+        - name: web
+          image: ghcr.io/bieniucieniu/zula/web-app:latest # {"$imagepolicy": "flux-system:zula-web-app"}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "3000"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: NODE_ENV
+              value: production
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 25m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-web
+    app.kubernetes.io/part-of: zula
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: zula-web
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP
