@@ -1,0 +1,26 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: zula-server
+  namespace: flux-system
+spec:
+  image: ghcr.io/bieniucieniu/zula/server
+  interval: 1m
+  secretRef:
+    name: ghcr-auth
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: zula-server
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: zula-server
+  filterTags:
+    pattern: ^latest$
+  digestReflectionPolicy: Always
+  interval: 5m
+  policy:
+    alphabetical:
+      order: asc

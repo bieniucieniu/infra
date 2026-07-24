@@ -1,0 +1,26 @@
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: zula-pg
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-pg
+    app.kubernetes.io/part-of: zula
+spec:
+  teamId: zula
+  numberOfInstances: 1
+  volume:
+    size: 2Gi
+  users:
+    zula: []
+  databases:
+    zula: zula
+  postgresql:
+    version: "18"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

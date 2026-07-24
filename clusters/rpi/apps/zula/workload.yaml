@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zula-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zula-backend
+        app.kubernetes.io/part-of: zula
+    spec:
+      serviceAccountName: zula-backend
+      imagePullSecrets:
+        - name: ghcr-auth
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:18-alpine
+          env:
+            - name: PGHOST
+              value: zula-pg
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: zula.zula-pg.credentials.postgresql.acid.zalan.do
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zula.zula-pg.credentials.postgresql.acid.zalan.do
+                  key: password
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until pg_isready -h "$PGHOST" -U "$PGUSER"; do
+                echo "waiting for postgres..."
+                sleep 2
+              done
+      containers:
+        - name: backend
+          image: ghcr.io/bieniucieniu/zula/server:latest # {"$imagepolicy": "flux-system:zula-server"}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: zula.zula-pg.credentials.postgresql.acid.zalan.do
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zula.zula-pg.credentials.postgresql.acid.zalan.do
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: zula
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: zula-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP

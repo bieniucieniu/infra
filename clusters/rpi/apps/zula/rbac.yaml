@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: zula-backend
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: zula-jwt-keys
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["zula-jwt-keys"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: zula-jwt-keys
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-backend
+    app.kubernetes.io/part-of: zula
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: zula-jwt-keys
+subjects:
+  - kind: ServiceAccount
+    name: zula-backend
+    namespace: zula
