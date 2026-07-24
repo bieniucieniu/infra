@@ -1,5 +1,5 @@
-apiVersion: acid.zalan.do/v1
-kind: postgresql
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
 metadata:
   name: zula-pg
   namespace: zula
@@ -7,20 +7,41 @@ metadata:
     app.kubernetes.io/name: zula-pg
     app.kubernetes.io/part-of: zula
 spec:
-  teamId: zula
-  numberOfInstances: 1
-  volume:
-    size: 2Gi
-  users:
-    zula: []
-  databases:
-    zula: zula
-  postgresql:
-    version: "18"
-  resources:
-    requests:
-      cpu: 50m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+  interval: 30m
+  timeout: 10m
+  chart:
+    spec:
+      chart: cluster
+      version: "0.8.1"
+      sourceRef:
+        kind: HelmRepository
+        name: cloudnative-pg
+        namespace: flux-system
+      interval: 12h
+  releaseName: zula-pg
+  values:
+    fullnameOverride: zula-pg
+    type: postgresql
+    mode: standalone
+    version:
+      postgresql: "18"
+    cluster:
+      instances: 1
+      imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie
+      enablePDB: false
+      storage:
+        size: 2Gi
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      initdb:
+        database: zula
+        owner: zula
+      affinity:
+        topologyKey: kubernetes.io/hostname
+      monitoring:
+        enabled: false
