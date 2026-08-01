@@ -46,7 +46,7 @@ spec:
               done
       containers:
         - name: backend
-          image: ghcr.io/bieniucieniu/zula/server:latest@sha256:153e804e8e97162604c620e4bb094f2ee1b7d8d925b10fb5f72b8408d08037de # {"$imagepolicy": "flux-system:zula-server"}
+          image: ghcr.io/bieniucieniu/zula/server:latest@sha256:9b0f4998023723f373717586053e27387b3a9023f751cf94794e2da2488956b0 # {"$imagepolicy": "flux-system:zula-server"}
           ports:
             - name: http
               containerPort: 8000
