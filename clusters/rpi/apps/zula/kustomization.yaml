@@ -5,6 +5,7 @@ resources:
   - rbac.yaml
   - postgres.yaml
   - backend-config.yaml
+  - minio.yaml
   - workload.yaml
   - web-workload.yaml
   - httproute.yaml
