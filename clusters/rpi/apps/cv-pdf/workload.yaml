@@ -28,7 +28,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: cv-pdf
-          image: ghcr.io/bieniucieniu/cv-pdf:latest@sha256:11c149ea3d0ad3b4f4ee93d78f3a82197d90bb2e5ae702b5cd59c03da928e20c # {"$imagepolicy": "flux-system:cv-pdf"}
+          image: ghcr.io/bieniucieniu/cv-pdf:latest@sha256:325f169951bf3310638b25ed13ac5fb4138c81442c82eaf611b43d90cad308de # {"$imagepolicy": "flux-system:cv-pdf"}
           ports:
             - name: http
               containerPort: 8080
