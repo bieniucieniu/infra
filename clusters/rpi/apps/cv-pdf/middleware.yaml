@@ -1,0 +1,13 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cv-pdf-auth
+  namespace: cv-pdf
+  labels:
+    app.kubernetes.io/name: cv-pdf
+    app.kubernetes.io/part-of: cv-pdf
+spec:
+  basicAuth:
+    secret: cv-pdf-basic-auth
+    realm: cv-pdf
+    removeHeader: true
