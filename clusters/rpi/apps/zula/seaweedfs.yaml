@@ -1,0 +1,129 @@
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Seaweed
+metadata:
+  name: seaweedfs
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  image: chrislusf/seaweedfs:4.45
+  volumeServerDiskCount: 1
+  master:
+    replicas: 1
+    volumeSizeLimitMB: 1024
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  volume:
+    replicas: 1
+    requests:
+      storage: 2Gi
+  filer:
+    replicas: 1
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    persistence:
+      enabled: true
+      resources:
+        requests:
+          storage: 1Gi
+    config: |
+      [leveldb2]
+      enabled = true
+      dir = "/data/filerldb2"
+  s3:
+    replicas: 1
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Identity
+metadata:
+  name: zula
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  seaweedRef:
+    name: seaweedfs
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Credentials
+metadata:
+  name: zula
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  seaweedRef:
+    name: seaweedfs
+  identityRef:
+    name: zula
+  secretRef:
+    name: zula
+    accessKeyField: S3_ACCESS_KEY
+    secretKeyField: S3_SECRET_KEY
+  reclaimPolicy: Retain
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Policy
+metadata:
+  name: zula-bucket
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  seaweedRef:
+    name: seaweedfs
+  statements:
+    - effect: Allow
+      actions:
+        - "s3:*"
+      resources:
+        - zula
+        - zula/*
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3PolicyBinding
+metadata:
+  name: zula-bucket
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  seaweedRef:
+    name: seaweedfs
+  policyRef:
+    name: zula-bucket
+  subjects:
+    - kind: S3Identity
+      name: zula
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Bucket
+metadata:
+  name: zula
+  namespace: zula
+  labels:
+    app.kubernetes.io/name: zula-seaweedfs
+    app.kubernetes.io/part-of: zula
+spec:
+  clusterRef:
+    name: seaweedfs
+    namespace: zula
