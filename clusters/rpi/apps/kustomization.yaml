@@ -4,8 +4,5 @@ resources:
   - breakout
   - cv-pdf
   - headlamp
-  - zula
   - image-update-automation.yaml
   - cv-pdf-image-update-automation.yaml
-  - zula-image-update-automation.yaml
-  - zula-web-image-update-automation.yaml
