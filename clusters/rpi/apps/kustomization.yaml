@@ -4,5 +4,7 @@ resources:
   - breakout
   - cv-pdf
   - headlamp
+  - solid-kit
   - image-update-automation.yaml
   - cv-pdf-image-update-automation.yaml
+  - solid-kit-image-update-automation.yaml
