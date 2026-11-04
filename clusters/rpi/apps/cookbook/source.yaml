@@ -1,0 +1,53 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: cookbook
+  namespace: flux-system
+spec:
+  image: ghcr.io/bieniucieniu/cookbook
+  interval: 1m
+  secretRef:
+    name: ghcr-auth
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: cookbook
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: cookbook
+  filterTags:
+    pattern: ^latest$
+  digestReflectionPolicy: Always
+  interval: 5m
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: cookbook-web
+  namespace: flux-system
+spec:
+  image: ghcr.io/bieniucieniu/cookbook/web
+  interval: 1m
+  secretRef:
+    name: ghcr-auth
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: cookbook-web
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: cookbook-web
+  filterTags:
+    pattern: ^latest$
+  digestReflectionPolicy: Always
+  interval: 5m
+  policy:
+    alphabetical:
+      order: asc

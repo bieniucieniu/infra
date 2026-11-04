@@ -1,0 +1,132 @@
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Seaweed
+metadata:
+  name: seaweed
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/name: seaweed
+    app.kubernetes.io/part-of: cookbook
+spec:
+  image: chrislusf/seaweedfs:4.51
+  volumeServerDiskCount: 1
+  master:
+    replicas: 1
+    volumeSizeLimitMB: 256
+    defaultReplication: "000"
+    persistence:
+      enabled: true
+      resources:
+        requests:
+          storage: 256Mi
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+  volume:
+    replicas: 1
+    requests:
+      storage: 2Gi
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  filer:
+    replicas: 1
+    config: |
+      [leveldb2]
+      enabled = true
+      dir = "/data/filerldb2"
+    persistence:
+      enabled: true
+      resources:
+        requests:
+          storage: 1Gi
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  s3:
+    replicas: 1
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Identity
+metadata:
+  name: cookbook
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/part-of: cookbook
+spec:
+  seaweedRef:
+    name: seaweed
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Credentials
+metadata:
+  name: cookbook
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/part-of: cookbook
+spec:
+  seaweedRef:
+    name: seaweed
+  identityRef:
+    name: cookbook
+  secretRef:
+    name: cookbook-s3
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3Policy
+metadata:
+  name: cookbook
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/part-of: cookbook
+spec:
+  seaweedRef:
+    name: seaweed
+  statements:
+    - effect: Allow
+      actions:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+        - s3:ListBucket
+      resources:
+        - cookbook
+        - cookbook/*
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: S3PolicyBinding
+metadata:
+  name: cookbook
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/part-of: cookbook
+spec:
+  seaweedRef:
+    name: seaweed
+  policyRef:
+    name: cookbook
+  subjects:
+    - kind: S3Identity
+      name: cookbook
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Bucket
+metadata:
+  name: cookbook
+  namespace: cookbook
+  labels:
+    app.kubernetes.io/part-of: cookbook
+spec:
+  name: cookbook
+  owner: cookbook
+  clusterRef:
+    name: seaweed
