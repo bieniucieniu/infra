@@ -66,6 +66,10 @@ spec:
               value: https://cookbook.kurwidolek.com/api/auth/callback
             - name: WORKOS_LOGOUT_RETURN_TO
               value: https://cookbook.kurwidolek.com/
+            - name: WORKOS_AUTHKIT_DOMAIN
+              value: https://true-gust-61-staging.authkit.app
+            - name: MCP_RESOURCE_URL
+              value: https://cookbook.kurwidolek.com/api/mcp
             - name: WORKOS_CLIENT_ID
               valueFrom:
                 secretKeyRef:
