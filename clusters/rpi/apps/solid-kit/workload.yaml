@@ -28,7 +28,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: solid-kit
-          image: ghcr.io/bieniucieniu/solid-kit/web:latest@sha256:950caadea294e58de651eda3a85886511d31ed1fcc3faa2b4a556615531b4138 # {"$imagepolicy": "flux-system:solid-kit"}
+          image: ghcr.io/bieniucieniu/solid-kit/web:latest@sha256:20e5414b60ffc1f30e2b152cab5f3b0f81f34a5319da77c0ef09f4213be5d127 # {"$imagepolicy": "flux-system:solid-kit"}
           ports:
             - name: http
               containerPort: 8080
