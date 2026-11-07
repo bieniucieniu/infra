@@ -10,6 +10,47 @@ Flux GitOps repo for the `rpi` k3s cluster. Three Flux Kustomizations reconcile 
 
 Check status: `flux get kustomizations -A`
 
+# Git
+
+Every commit uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). A branch an agent creates uses [Conventional Branch](https://conventionalbranch.org/).
+
+## Commits
+
+`<type>[optional scope][!]: <description>`
+
+- Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+- Scope is the app or area (`cookbook`, `traefik`, `solid-kit`)
+- Description is imperative, lowercase, and has no trailing period
+- A breaking change adds `!` after the type or scope and a `BREAKING CHANGE:` footer
+- One subject line. Add a body only when the why is not obvious
+
+```
+feat(cookbook): set the authkit domain
+chore(solid-kit): update image
+```
+
+## Branches
+
+`<type>/<description>`
+
+The agent that creates the branch is the type:
+
+| Agent | Type |
+| --- | --- |
+| Cursor | `cursor` |
+| Claude | `claude` |
+| Any other agent | `ai` |
+
+Description is lowercase `a-z`, digits, and hyphens. Dots are for versions. No underscores, spaces, doubled hyphens, or a hyphen at either end.
+
+```
+cursor/cookbook-authkit-domain
+claude/traefik-gateway-policy
+ai/image-update-automation
+```
+
+`main`, `master`, and `develop` stay as they are. Create a branch only when the user asks. A commit on the current branch still uses Conventional Commits.
+
 ## Layout
 
 ```
