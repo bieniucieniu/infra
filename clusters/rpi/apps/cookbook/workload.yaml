@@ -145,7 +145,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: cookbook-web
-          image: ghcr.io/bieniucieniu/cookbook/web:latest@sha256:1c77fc2276e33daf4d84d46b98a58fc46f8fce11ab941ccf0d8157fc7f9627d8 # {"$imagepolicy": "flux-system:cookbook-web"}
+          image: ghcr.io/bieniucieniu/cookbook/web:latest@sha256:fc14a9f5b2a88b723aabe5cb4be7e8b2990a2420af558cbfb0f5f67cdb4a332c # {"$imagepolicy": "flux-system:cookbook-web"}
           ports:
             - name: http
               containerPort: 8080
