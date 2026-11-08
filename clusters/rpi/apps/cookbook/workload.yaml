@@ -63,13 +63,13 @@ spec:
                   name: cookbook-s3
                   key: secretKey
             - name: WORKOS_REDIRECT_URI
-              value: https://cookbook.kurwidolek.com/api/auth/callback
+              value: https://cookbook.kurwidolek.com/api/v1/auth/callback
             - name: WORKOS_LOGOUT_RETURN_TO
               value: https://cookbook.kurwidolek.com/
             - name: WORKOS_AUTHKIT_DOMAIN
               value: https://true-gust-61-staging.authkit.app
             - name: MCP_RESOURCE_URL
-              value: https://cookbook.kurwidolek.com/api/mcp
+              value: https://cookbook.kurwidolek.com/api/v1/mcp
             - name: WORKOS_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -90,13 +90,13 @@ spec:
                   optional: true
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: http
             initialDelaySeconds: 15
             periodSeconds: 30

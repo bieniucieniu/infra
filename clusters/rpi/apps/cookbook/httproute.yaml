@@ -14,19 +14,18 @@ spec:
   hostnames:
     - cookbook.kurwidolek.com
   rules:
+    # The API serves everything under /api/v1 itself, so paths pass through unchanged.
+    # OAuth discovery for the MCP endpoint lives at the host root (RFC 8414 / RFC 9728).
     - matches:
         - path:
             type: PathPrefix
             value: /api
         - path:
             type: PathPrefix
-            value: /mcp
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: cookbook-strip-api
+            value: /.well-known/oauth-protected-resource
+        - path:
+            type: PathPrefix
+            value: /.well-known/oauth-authorization-server
       backendRefs:
         - name: cookbook
           port: 8080

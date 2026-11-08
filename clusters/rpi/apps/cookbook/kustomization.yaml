@@ -5,5 +5,4 @@ resources:
   - postgres.yaml
   - seaweed.yaml
   - httproute.yaml
-  - middleware.yaml
   - source.yaml
