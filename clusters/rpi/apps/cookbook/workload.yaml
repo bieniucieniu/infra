@@ -28,7 +28,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: cookbook
-          image: ghcr.io/bieniucieniu/cookbook:latest@sha256:58f7a0253e2e98278503bc2c21918beb574ce3c439c0d9a2a14f7dbce358b4ae # {"$imagepolicy": "flux-system:cookbook"}
+          image: ghcr.io/bieniucieniu/cookbook:latest@sha256:4a1a6c41fb8b6db90528ae4999270fb4b8de3afd76a6bb351d62b831ef93ecb3 # {"$imagepolicy": "flux-system:cookbook"}
           ports:
             - name: http
               containerPort: 8080
