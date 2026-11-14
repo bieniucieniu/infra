@@ -4,3 +4,4 @@ resources:
   - traefik
   - cloudnative-pg
   - seaweedfs-operator
+  - seaweedfs

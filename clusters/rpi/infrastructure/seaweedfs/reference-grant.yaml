@@ -1,0 +1,27 @@
+# Lets S3 and bucket resources in any namespace reference the shared Seaweed cluster.
+apiVersion: seaweed.seaweedfs.com/v1
+kind: ResourceReferenceGrant
+metadata:
+  name: allow-all-namespaces
+  namespace: seaweedfs
+spec:
+  from:
+    - group: seaweed.seaweedfs.com
+      kind: Bucket
+      namespaceSelector: {}
+    - group: seaweed.seaweedfs.com
+      kind: S3Identity
+      namespaceSelector: {}
+    - group: seaweed.seaweedfs.com
+      kind: S3Credentials
+      namespaceSelector: {}
+    - group: seaweed.seaweedfs.com
+      kind: S3Policy
+      namespaceSelector: {}
+    - group: seaweed.seaweedfs.com
+      kind: S3PolicyBinding
+      namespaceSelector: {}
+  to:
+    - group: seaweed.seaweedfs.com
+      kind: Seaweed
+      name: seaweed
