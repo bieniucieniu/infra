@@ -1,34 +1,34 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: solid-kit
+  name: solidx
   labels:
-    app.kubernetes.io/name: solid-kit
+    app.kubernetes.io/name: solidx
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: solid-kit
-  namespace: solid-kit
+  name: solidx
+  namespace: solidx
   labels:
-    app.kubernetes.io/name: solid-kit
-    app.kubernetes.io/part-of: solid-kit
+    app.kubernetes.io/name: solidx
+    app.kubernetes.io/part-of: solidx
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: solid-kit
+      app.kubernetes.io/name: solidx
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: solid-kit
-        app.kubernetes.io/part-of: solid-kit
+        app.kubernetes.io/name: solidx
+        app.kubernetes.io/part-of: solidx
     spec:
       imagePullSecrets:
         - name: ghcr-auth
       containers:
-        - name: solid-kit
-          image: ghcr.io/bieniucieniu/solid-kit/web:latest@sha256:516a62eeaee18d31d82951011094897b7b3bdd576c117b51b69cb24bc1a1692b # {"$imagepolicy": "flux-system:solid-kit"}
+        - name: solidx
+          image: ghcr.io/bieniucieniu/solidx/web:latest # {"$imagepolicy": "flux-system:solidx"}
           ports:
             - name: http
               containerPort: 8080
@@ -56,15 +56,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: solid-kit
-  namespace: solid-kit
+  name: solidx
+  namespace: solidx
   labels:
-    app.kubernetes.io/name: solid-kit
-    app.kubernetes.io/part-of: solid-kit
+    app.kubernetes.io/name: solidx
+    app.kubernetes.io/part-of: solidx
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: solid-kit
+    app.kubernetes.io/name: solidx
   ports:
     - name: http
       port: 8080

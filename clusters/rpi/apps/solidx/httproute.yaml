@@ -1,17 +1,19 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: solid-kit
-  namespace: solid-kit
+  name: solidx
+  namespace: solidx
   labels:
-    app.kubernetes.io/name: solid-kit
-    app.kubernetes.io/part-of: solid-kit
+    app.kubernetes.io/name: solidx
+    app.kubernetes.io/part-of: solidx
 spec:
   parentRefs:
     - name: traefik-gateway
       namespace: kube-system
       sectionName: web
   hostnames:
+    - solidx.kurwidolek.com
+    # The old name keeps working until DNS and the tunnel point only at solidx.
     - solid-kit.kurwidolek.com
   rules:
     - matches:
@@ -19,5 +21,5 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: solid-kit
+        - name: solidx
           port: 8080

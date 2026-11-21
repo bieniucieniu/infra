@@ -1,7 +1,7 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
-  name: solid-kit
+  name: solidx
   namespace: flux-system
 spec:
   interval: 5m
@@ -17,7 +17,7 @@ spec:
         name: fluxcdbot
         email: fluxcdbot@users.noreply.github.com
       messageTemplate: |
-        chore(solid-kit): update image
+        chore(solidx): update image
 
         {{ range $_, $change := .Changed.Changes -}}
         - {{ $change.OldValue }} -> {{ $change.NewValue }}
@@ -25,5 +25,5 @@ spec:
     push:
       branch: main
   update:
-    path: ./clusters/rpi/apps/solid-kit
+    path: ./clusters/rpi/apps/solidx
     strategy: Setters

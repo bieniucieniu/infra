@@ -1,10 +1,10 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: solid-kit
+  name: solidx
   namespace: flux-system
 spec:
-  image: ghcr.io/bieniucieniu/solid-kit/web
+  image: ghcr.io/bieniucieniu/solidx/web
   interval: 1m
   secretRef:
     name: ghcr-auth
@@ -12,11 +12,11 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: solid-kit
+  name: solidx
   namespace: flux-system
 spec:
   imageRepositoryRef:
-    name: solid-kit
+    name: solidx
   filterTags:
     pattern: ^latest$
   digestReflectionPolicy: Always
