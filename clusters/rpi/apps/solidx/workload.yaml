@@ -28,7 +28,7 @@ spec:
         - name: ghcr-auth
       containers:
         - name: solidx
-          image: ghcr.io/bieniucieniu/solidx/web:latest@sha256:aa47296b12f6d6838d31538be7f07ec24cb11f211931be8c97ea4e02b7f3fac1 # {"$imagepolicy": "flux-system:solidx"}
+          image: ghcr.io/bieniucieniu/solidx/web:latest@sha256:68222bafd3f76834063be1fc5c2d53f6d39ee77dd80b0ebf91bdfab459a20ed6 # {"$imagepolicy": "flux-system:solidx"}
           ports:
             - name: http
               containerPort: 8080
